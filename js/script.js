@@ -8,6 +8,39 @@ const listItems = document.querySelector('.student-list').children;
 const itemsToDisplay = 10;
 
 /**
+* Create an HTML element
+*
+* @param {string} elementName - The element type
+* @param {Array<Object>} attributes - An array of objects containing properties and values
+* @returns {HTMLElement} element - An HTML element
+*/
+function createElement (elementName, attributes) {
+  const element = document.createElement(elementName);
+
+  // Check if the function call has attribute argument
+  // If has attributes, loop through argument object and append attributes to element
+  if (attributes) {
+    for (let i = 0; i < attributes.length; i++) {
+      let attribute = attributes[i];
+      element[attribute.property] = attribute.value;
+      // Check if the attribute has a class array object
+      if (attribute.property === 'classList' && attribute.property.length > 1) {
+        for (let j = 0; j < attribute.value.length; j++) {
+          element.classList.add(attribute.value[j]);
+        }
+      }
+    }
+  }
+  return element;
+}
+
+function createAndAppendElement (elementName, attributes, appendTo) {
+  const element = createElement(elementName, attributes);
+  document.querySelector(appendTo).appendChild(element);
+  return element;
+}
+
+/**
 * Hide list items outside of desired indexes
 * @param {HTMLCollection} listItems - A HTML Collection of list items
 * @param {number} pageNumber - The currently visible page
@@ -32,35 +65,52 @@ function showPage (listItems, pageNumber) {
   }
 }
 
-/**
-* Create an HTML element
-*
-* @param {string} elementName - The element type
-* @param {Array<Object>} attributes - An array of objects containing properties and values
-* @returns {HTMLElement} element - An HTML element
-*/
-function createElement (elementName, attributes) {
-  const element = document.createElement(elementName);
+function appendPageLinks(list) {
+  /********************************
+  * Create page link elements
+  * THIS LOOKS LIKE A FUCKING MESS. REFACTOR PLS
+  ********************************/
+  const div = createAndAppendElement(
+    'div',
+    [{
+      property: 'className',
+      value: 'pagination'
+    }],
+    '.page'
+  );
 
-  // Check if the function call has attribute argument
-  // If has attributes, loop through argument object and append attributes to element
-  if (attributes) {
-    for (let i = 0; i < attributes.length; i++) {
-      let attribute = attributes[i];
-      element[attribute.property] = attribute.value;
-      // Check if the attribute has a class array object
-      if (attribute.property === 'class') {
-        for (let j = 0; j < attribute.value.length; j++) {
-          element.classList.add(attribute.value[j]);
-        }
-      }
-    }
+  const ul = createAndAppendElement(
+    'ul',
+    [{
+      property: 'className',
+      value: 'pagination__list'
+    }],
+    '.pagination'
+  );
+
+  // Create and append li and links
+  const numberOfLinks = Math.ceil(list.length / itemsToDisplay);
+  for (let i = 0; i < numberOfLinks; i++) {
+    let pageNumber = i + 1;
+    let li = createAndAppendElement(
+      'li',
+      [{
+        property: 'className',
+        value: 'pagination__list-item'
+      }],
+      '.pagination__list'
+    ).appendChild(createElement('a', [{property: 'href', value: '#'}, {property: 'textContent', value: pageNumber}]));
   }
 
-  return element;
+  // Functionality
+  ul.addEventListener('click', (e) => {
+    const target = e.target;
+    showPage(listItems, target.textContent);
+  });
 }
 
-
+showPage(listItems, 1);
+appendPageLinks(listItems);
 
 
 /***
