@@ -3,7 +3,7 @@ Treehouse Techdegree:
 FSJS project 2 - List Filter and Pagination
 // Study guide for this project - https://drive.google.com/file/d/1OD1diUsTMdpfMDv677TfL1xO2CEkykSz/view?usp=sharing
 ******************************************/
-
+// Globals
 const listItems = document.querySelector('.student-list').children;
 const itemsToDisplay = 10;
 
@@ -45,18 +45,18 @@ function createAndAppendElement (elementName, attributes, appendTo) {
 * @param {HTMLCollection} listItems - A HTML Collection of list items
 * @param {number} pageNumber - The currently visible page
 */
-function showPage (listItems, pageNumber) {
+function showPage (list, pageNumber) {
   const startIndex = (pageNumber * itemsToDisplay) - itemsToDisplay;
   const endIndex = pageNumber * itemsToDisplay;
 
   // Stop execution if list is empty
   // TODO: Add checks for undefined or null
-  if (listItems.length === 0) {
+  if (list.length === 0) {
     throw Error('List is empty');
   }
 
-  for (let i = 0; i < listItems.length; i++) {
-    let currentItem = listItems[i];
+  for (let i = 0; i < list.length; i++) {
+    let currentItem = list[i];
     if (i >= startIndex && i <= endIndex) {
       currentItem.style.display = 'block';
     } else {
@@ -66,10 +66,6 @@ function showPage (listItems, pageNumber) {
 }
 
 function appendPageLinks(list) {
-  /********************************
-  * Create page link elements
-  * THIS LOOKS LIKE A FUCKING MESS. REFACTOR PLS
-  ********************************/
   const div = createAndAppendElement(
     'div',
     [{
@@ -88,6 +84,15 @@ function appendPageLinks(list) {
     '.pagination'
   );
 
+  // Remove old links
+  const elements = document.querySelectorAll('.pagination__list > li');
+
+  if (elements) {
+    for (let i = 0; i < elements.length; i++) {
+      document.querySelector('.pagination__list').removeChild(elements[i]);
+    }
+  }
+
   // Create and append li and links
   const numberOfLinks = Math.ceil(list.length / itemsToDisplay);
   for (let i = 0; i < numberOfLinks; i++) {
@@ -102,18 +107,82 @@ function appendPageLinks(list) {
     ).appendChild(createElement('a', [{property: 'href', value: '#'}, {property: 'textContent', value: pageNumber}]));
   }
 
+  document.querySelector('.pagination__list').firstElementChild.firstElementChild.classList.add('active');
+
   // Functionality
   ul.addEventListener('click', (e) => {
     const target = e.target;
     showPage(listItems, target.textContent);
+
+    // Remove 'active' class from currently active link & append 'active' to target
+    document.querySelector('.active').classList.remove('active');
+    target.classList.add('active');
   });
 }
 
+function searchStudentList (list) {
+  // Generate HTML elements
+  const div = createAndAppendElement(
+    'div',
+    [{property: 'className', value: 'student-search'}],
+    '.page-header');
+
+  const form = createAndAppendElement(
+    'form',
+    [{property: 'className', value: 'student-search__form'}, {property: 'action', value: '#'}],
+    '.student-search');
+
+  const input = createAndAppendElement(
+    'input',
+    [{property: 'type', value: 'input'}, {property: 'placeholder', value: 'Search for students...'}],
+    '.student-search__form');
+
+  const submit = createAndAppendElement(
+    'button',
+    [{property: 'textContent', value: 'Search'}],
+    '.student-search__form');
+
+  input.addEventListener('keyup', (e) => {
+    const searchResults = [];
+    // Add items to list that match search query
+    for (let i = 0; i < list.length; i++) {
+      let currentName = list[i].children[0].children[1];
+      if (currentName.textContent.includes(input.value)) {
+        searchResults.push(list[i]);
+      }
+    }
+    // Remove entries from list that do not match search query
+    for (let i = 0; i < searchResults.list; i++) {
+      let currentName = searchResults[i].children[0].children[1];
+      if (!currentName.textContent.includes(input.value)) {
+        // Remove the item
+        searchResults.splice(i, 1);
+      }
+    }
+
+    // Set display on all 'listItems' to 'none'
+    for (let i = 0; i < listItems.length; i++) {
+      listItems[i].style.display = 'none';
+    }
+
+    showPage(searchResults, 1);
+    appendPageLinks(searchResults);
+  });
+
+  submit.addEventListener('click', () => {
+    const searchResults = [];
+    // Add items to list that match search query
+    for (let i = 0; i < list.length; i++) {
+      let currentName = list[i].children[0].children[1];
+      if (currentName.textContent.includes(input.value)) {
+        searchResults.push(list[i]);
+      }
+    }
+    showPage(searchResults, 1);
+    appendPageLinks(searchResults);
+  });
+}
+
+searchStudentList(listItems);
 showPage(listItems, 1);
 appendPageLinks(listItems);
-
-
-/***
-   Create the `appendPageLinks function` to generate, append, and add
-   functionality to the pagination buttons.
-***/
