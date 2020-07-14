@@ -3,7 +3,6 @@ Treehouse Techdegree:
 FSJS project 2 - List Filter and Pagination
 // Study guide for this project - https://drive.google.com/file/d/1OD1diUsTMdpfMDv677TfL1xO2CEkykSz/view?usp=sharing
 ******************************************/
-// Globals
 const listItems = document.querySelector('.student-list').children;
 const itemsToDisplay = 10;
 
@@ -34,6 +33,14 @@ function createElement (elementName, attributes) {
   return element;
 }
 
+/**
+* Invokes and appends a new element to the DOM
+*
+* @param {string} elementName - The element type
+* @param {Array<Object>} attributes - An array of objects containing properties and values
+* @param {string} appendTo - The DOM element the new element will be appended to
+* @returns {HTMLElement} element - An HTML element
+*/
 function createAndAppendElement (elementName, attributes, appendTo) {
   const element = createElement(elementName, attributes);
   document.querySelector(appendTo).appendChild(element);
@@ -42,7 +49,7 @@ function createAndAppendElement (elementName, attributes, appendTo) {
 
 /**
 * Hide list items outside of desired indexes
-* @param {HTMLCollection} listItems - A HTML Collection of list items
+* @param {HTMLCollection} list - An HTML Collection of list items
 * @param {number} pageNumber - The currently visible page
 */
 function showPage (list, pageNumber) {
@@ -50,8 +57,7 @@ function showPage (list, pageNumber) {
   const endIndex = pageNumber * itemsToDisplay;
 
   // Stop execution if list is empty
-  // TODO: Add checks for undefined or null
-  if (list.length === 0) {
+  if (!list.length) {
     throw Error('List is empty');
   }
 
@@ -65,6 +71,11 @@ function showPage (list, pageNumber) {
   }
 }
 
+/**
+* Create and append pagination element
+*
+* @param {HTMLCollection} list - An HTML Collection of list items
+*/
 function appendPageLinks(list) {
   const div = createAndAppendElement(
     'div',
@@ -84,16 +95,15 @@ function appendPageLinks(list) {
     '.pagination'
   );
 
-  // Remove old links
+  // If any pagination links already exist, remove them from the DOM
   const elements = document.querySelectorAll('.pagination__list > li');
-
   if (elements) {
     for (let i = 0; i < elements.length; i++) {
       document.querySelector('.pagination__list').removeChild(elements[i]);
     }
   }
 
-  // Create and append li and links
+  // Create and append li and link elements
   const numberOfLinks = Math.ceil(list.length / itemsToDisplay);
   for (let i = 0; i < numberOfLinks; i++) {
     let pageNumber = i + 1;
@@ -107,9 +117,9 @@ function appendPageLinks(list) {
     ).appendChild(createElement('a', [{property: 'href', value: '#'}, {property: 'textContent', value: pageNumber}]));
   }
 
+  // Set 'active' class on the first link
   document.querySelector('.pagination__list').firstElementChild.firstElementChild.classList.add('active');
 
-  // Functionality
   ul.addEventListener('click', (e) => {
     const target = e.target;
     showPage(listItems, target.textContent);
@@ -120,66 +130,95 @@ function appendPageLinks(list) {
   });
 }
 
+/**
+* Create and append search elements and functionality.
+*
+* @param {HTMLCollection} list - An HTML Collection of list items
+*/
 function searchStudentList (list) {
-  // Generate HTML elements
   const div = createAndAppendElement(
     'div',
     [{property: 'className', value: 'student-search'}],
-    '.page-header');
+    '.page-header'
+  );
 
   const form = createAndAppendElement(
     'form',
     [{property: 'className', value: 'student-search__form'}, {property: 'action', value: '#'}],
-    '.student-search');
+    '.student-search'
+  );
 
   const input = createAndAppendElement(
     'input',
     [{property: 'type', value: 'input'}, {property: 'placeholder', value: 'Search for students...'}],
-    '.student-search__form');
+    '.student-search__form'
+  );
 
   const submit = createAndAppendElement(
     'button',
     [{property: 'textContent', value: 'Search'}],
-    '.student-search__form');
+    '.student-search__form'
+  );
 
-  input.addEventListener('keyup', (e) => {
+  /**
+  * Manage search functionality.
+  * Uses new list to pass in as function invocation arguments to showPage and appendPageLinks functions.
+  */
+  function showSearchResults() {
+    /**
+    * If a results message already exists, remove it from the DOM.
+    */
+    function clearMessage() {
+      if (document.querySelector('.results-message')) {
+        const page = document.querySelector('.page');
+        page.removeChild(document.querySelector('.results-message'));
+      }
+    }
+
     const searchResults = [];
-    // Add items to list that match search query
+
+    // Add items to searchResults that match search query
     for (let i = 0; i < list.length; i++) {
       let currentName = list[i].children[0].children[1];
       if (currentName.textContent.includes(input.value)) {
         searchResults.push(list[i]);
       }
     }
+
     // Remove entries from list that do not match search query
     for (let i = 0; i < searchResults.list; i++) {
       let currentName = searchResults[i].children[0].children[1];
       if (!currentName.textContent.includes(input.value)) {
-        // Remove the item
         searchResults.splice(i, 1);
       }
     }
 
-    // Set display on all 'listItems' to 'none'
+    // Set display on all listItems to none
     for (let i = 0; i < listItems.length; i++) {
       listItems[i].style.display = 'none';
     }
 
-    showPage(searchResults, 1);
-    appendPageLinks(searchResults);
+    if (searchResults.length) {
+      clearMessage()
+      showPage(searchResults, 1);
+      appendPageLinks(searchResults);
+    } else {
+      clearMessage();
+      createAndAppendElement(
+        'p',
+        [{property: 'textContent', value: 'No results found.'}, {property: 'className', value: 'results-message'}],
+        '.page'
+      );
+    }
+  }
+
+  input.addEventListener('keyup', (e) => {
+    showSearchResults();
   });
 
-  submit.addEventListener('click', () => {
-    const searchResults = [];
-    // Add items to list that match search query
-    for (let i = 0; i < list.length; i++) {
-      let currentName = list[i].children[0].children[1];
-      if (currentName.textContent.includes(input.value)) {
-        searchResults.push(list[i]);
-      }
-    }
-    showPage(searchResults, 1);
-    appendPageLinks(searchResults);
+  submit.addEventListener('click', (e) => {
+    e.preventDefault();
+    showSearchResults();
   });
 }
 
