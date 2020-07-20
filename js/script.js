@@ -77,24 +77,6 @@ function showPage (list, pageNumber) {
 * @param {HTMLCollection} list - An HTML Collection of list items
 */
 function appendPageLinks(list) {
-  const div = createAndAppendElement(
-    'div',
-    [{
-      property: 'className',
-      value: 'pagination'
-    }],
-    '.page'
-  );
-
-  const ul = createAndAppendElement(
-    'ul',
-    [{
-      property: 'className',
-      value: 'pagination__list'
-    }],
-    '.pagination'
-  );
-
   // If any pagination links already exist, remove them from the DOM
   const elements = document.querySelectorAll('.pagination__list > li');
   if (elements) {
@@ -119,15 +101,6 @@ function appendPageLinks(list) {
 
   // Set 'active' class on the first link
   document.querySelector('.pagination__list').firstElementChild.firstElementChild.classList.add('active');
-
-  ul.addEventListener('click', (e) => {
-    const target = e.target;
-    showPage(listItems, target.textContent);
-
-    // Remove 'active' class from currently active link & append 'active' to target
-    document.querySelector('.active').classList.remove('active');
-    target.classList.add('active');
-  });
 }
 
 /**
@@ -201,9 +174,12 @@ function searchStudentList (list) {
     if (searchResults.length) {
       clearMessage()
       showPage(searchResults, 1);
+      createPaginationElement();
       appendPageLinks(searchResults);
     } else {
       clearMessage();
+      // Remove pagination element
+      document.querySelector('.page').removeChild(document.querySelector('.pagination'));
       createAndAppendElement(
         'p',
         [{property: 'textContent', value: 'No results found.'}, {property: 'className', value: 'results-message'}],
@@ -222,6 +198,36 @@ function searchStudentList (list) {
   });
 }
 
+function createPaginationElement() {
+  const div = createAndAppendElement(
+    'div',
+    [{
+      property: 'className',
+      value: 'pagination'
+    }],
+    '.page'
+  );
+
+  const ul = createAndAppendElement(
+    'ul',
+    [{
+      property: 'className',
+      value: 'pagination__list'
+    }],
+    '.pagination'
+  );
+
+  ul.addEventListener('click', (e) => {
+    const target = e.target;
+    showPage(listItems, target.textContent);
+
+    // Remove 'active' class from currently active link & append 'active' to target
+    document.querySelector('.active').classList.remove('active');
+    target.classList.add('active');
+  });
+}
+
+createPaginationElement();
 searchStudentList(listItems);
 showPage(listItems, 1);
 appendPageLinks(listItems);
